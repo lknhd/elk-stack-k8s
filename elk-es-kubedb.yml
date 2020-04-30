@@ -1,0 +1,68 @@
+apiVersion: kubedb.com/v1alpha1
+kind: Elasticsearch
+metadata:
+  name: elk-es
+  labels:
+    app: elk-es
+    stack: elasticsearch
+spec:
+  authPlugin: None
+  enableSSL: false
+  podTemplate:
+    metadata:
+      labels:
+        app: elk-es
+        stack: elasticsearch
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: infra.ruangguru.com/env
+                operator: In
+                values:
+                - production
+              - key: infra.ruangguru.com/country
+                operator: In
+                values:
+                - id
+              - key: cloud.google.com/gke-preemptible
+                operator: Exists
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - elk-es
+              topologyKey: kubernetes.io/hostname
+            weight: 100
+      env:
+      - name: ES_JAVA_OPTS
+        value: -Xms1g -Xmx1g
+      resources:
+        limits:
+          cpu: 1
+          memory: 2G
+        requests:
+          cpu: 1
+          memory: 2G
+  replicas: 1
+  serviceTemplate:
+    spec:
+      type: ClusterIP
+  storage:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: 64Gi
+    storageClassName: fast
+  storageType: Durable
+  terminationPolicy: Pause
+  updateStrategy:
+    type: RollingUpdate
+  version: 6.5.3

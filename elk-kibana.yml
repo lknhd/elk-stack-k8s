@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: elk-kibana
+  labels:
+    app: elk-kibana
+    stack: kibana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: elk-kibana
+      stack: kibana
+  template:
+    metadata:
+      labels:
+        app: elk-kibana
+        stack: kibana
+      annotations:
+        seccomp.security.alpha.kubernetes.io/pod: 'docker/default'
+    spec:
+      containers:
+      - name: kibana-logging
+        image: docker.elastic.co/kibana/kibana-oss:6.2.4
+        env:
+          - name: ELASTICSEARCH_URL
+            value: http://elk-es:9200
+        ports:
+        - containerPort: 5601
+          name: ui
+          protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: elk-kibana
+  labels:
+    app: elk-kibana
+    stack: kibana
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+    kubernetes.io/name: "Kibana"
+spec:
+  ports:
+  - port: 5601
+    protocol: TCP
+    targetPort: ui
+  selector:
+    app: elk-kibana
+    stack: kibana

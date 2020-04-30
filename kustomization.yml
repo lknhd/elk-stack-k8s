@@ -1,0 +1,16 @@
+---
+namespace: monitoring
+commonLabels:
+  serviceName: elk
+
+resources:
+- elk-es-kubedb.yml
+- elk-logstash-deployment.yml
+- elk-logstash-service.yml
+- elk-kibana.yml
+
+configMapGenerator:
+- name: elk-logstash-config
+  files:
+  - config/logstash.conf
+  - config/logstash.yml

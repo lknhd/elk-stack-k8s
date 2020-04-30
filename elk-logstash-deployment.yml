@@ -1,0 +1,53 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: elk-logstash
+  labels:
+    app: elk-logstash
+    stack: logstash 
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: elk-es
+        stack: logstash    
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: infra.ruangguru.com/env
+                operator: In
+                values:
+                - production
+              - key: infra.ruangguru.com/country
+                operator: In
+                values:
+                - id
+              - key: cloud.google.com/gke-preemptible
+                operator: Exists
+      containers:
+      - name: logstash
+        image: docker.elastic.co/logstash/logstash:6.3.0
+        ports:
+        - containerPort: 5044
+        volumeMounts:
+          - name: config-volume
+            mountPath: /usr/share/logstash/config
+          - name: logstash-pipeline-volume
+            mountPath: /usr/share/logstash/pipeline
+      volumes:
+      - name: config-volume
+        configMap:
+          name: elk-logstash-config
+          items:
+            - key: logstash.yml
+              path: logstash.yml
+      - name: logstash-pipeline-volume
+        configMap:
+          name: elk-logstash-config
+          items:
+            - key: logstash.conf
+              path: logstash.conf
