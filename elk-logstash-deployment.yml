@@ -10,7 +10,7 @@ spec:
   template:
     metadata:
       labels:
-        app: elk-es
+        app: elk-logstash
         stack: logstash    
     spec:
       affinity:
